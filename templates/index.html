@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Website Vật Lý Trị Liệu</title>
+    <style>
+        :root {
+            --primary-color: #2196F3;
+            --secondary-color: #03A9F4;
+            --accent-color: #00BCD4;
+            --background-color: #f0f2f5;
+            --card-background: #ffffff;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: var(--background-color);
+            color: #333;
+            line-height: 1.6;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 2rem;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        main {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        section {
+            background: var(--card-background);
+            border-radius: 15px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        section:hover {
+            transform: translateY(-5px);
+        }
+
+        h2 {
+            color: var(--primary-color);
+            margin-bottom: 1.5rem;
+            position: relative;
+            padding-left: 1rem;
+        }
+
+        h2::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 4px;
+            height: 24px;
+            background: var(--accent-color);
+            border-radius: 2px;
+        }
+
+        #video-section {
+            text-align: center;
+        }
+
+        video {
+            max-width: 100%;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        ul {
+            list-style: none;
+        }
+
+        li {
+            background: var(--background-color);
+            margin: 1rem 0;
+            padding: 1rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+        }
+
+        li::before {
+            content: '▹';
+            color: var(--accent-color);
+            margin-right: 1rem;
+            font-size: 1.2rem;
+        }
+
+        li:hover {
+            background: var(--primary-color);
+            color: white;
+            transform: translateX(10px);
+        }
+
+        footer {
+            background: linear-gradient(135deg, var(--secondary-color), var(--primary-color));
+            color: white;
+            text-align: center;
+            padding: 1.5rem;
+            margin-top: 3rem;
+        }
+
+        @media (max-width: 768px) {
+            header {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            section {
+                padding: 1.5rem;
+            }
+
+            video {
+                width: 100%;
+                height: auto;
+            }
+        }
+
+        /* Digital Animation Effects */
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+
+        .digital-effect {
+            animation: pulse 2s infinite;
+        }
+
+        /* Modern Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--background-color);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary-color);
+            border-radius: 4px;
+        }
+
+        /* Loading Effect */
+        .loading {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .loading::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            animation: loading 1.5s infinite;
+        }
+
+        @keyframes loading {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+    </style>
+</head>
+<body>
+    <header class="digital-effect">
+        <h1>Chương Trình Vật Lý Trị Liệu</h1>
+        <p>Phục hồi chức năng - Nâng cao sức khỏe</p>
+    </header>
+
+    <main>
+        <section id="video-section" class="loading">
+            <h2>Video Quan Sát</h2>
+            <video id="patient-video" width="640" height="480" controls>
+                <source src="{{ url_for('static', filename='videos/video.mp4') }}" type="video/mp4">
+                Trình duyệt của bạn không hỗ trợ video.
+            </video>
+            <img src="{{ url_for('video_feed') }}" alt="Video Feed">
+        </section>
+
+        <section id="exercises">
+            <h2>Các Bài Tập</h2>
+            <ul>
+                <li>Bài Tập 1: Tập cơ tay</li>
+                <li>Bài Tập 2: Tập cơ chân</li>
+                <li>Bài Tập 3: Tập thăng bằng</li>
+                <li>Bài Tập 4: Tập kéo giãn</li>
+                <li>Bài Tập 5: Tập sức bền</li>
+            </ul>
+        </section>
+
+        <section id="patients">
+            <h2>Danh Sách Bệnh Nhân</h2>
+            <ul>
+                <li>Bệnh Nhân 1: Nguyễn Văn A</li>
+                <li>Bệnh Nhân 2: Trần Thị B</li>
+                <li>Bệnh Nhân 3: Lê Văn C</li>
+                <li>Bài Tập 4: Phạm Thị D</li>
+                <li>Bài Tập 5: Võ Văn E</li>
+            </ul>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2023 Chương Trình Vật Lý Trị Liệu</p>
+    </footer>
+</body>
+</html>

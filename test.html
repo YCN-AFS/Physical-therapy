@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Website Vật Lý Trị Liệu</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #4158D0;
+            --secondary-color: #C850C0;
+            --accent-color: #FFCC70;
+            --background-color: #0a0a1f;
+            --card-background: rgba(255, 255, 255, 0.1);
+            --text-color: #ffffff;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Animated Background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 20%, rgba(65, 88, 208, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 80% 80%, rgba(200, 80, 192, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 50% 50%, rgba(255, 204, 112, 0.1) 0%, transparent 60%);
+            animation: backgroundMove 20s ease infinite;
+            z-index: -1;
+        }
+
+        @keyframes backgroundMove {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        /* Floating Particles */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .particle {
+            position: absolute;
+            width: 3px;
+            height: 3px;
+            background: var(--accent-color);
+            border-radius: 50%;
+            animation: float 20s infinite linear;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0) translateX(0); opacity: 0; }
+            50% { opacity: 0.5; }
+            100% { transform: translateY(-100vh) translateX(100vw); opacity: 0; }
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 3rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            clip-path: polygon(0 0, 100% 0, 100% 85%, 0 100%);
+        }
+
+        /* Digital Wave Effect */
+        header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 50%;
+            background: linear-gradient(45deg, transparent 40%, rgba(255,255,255,0.1) 45%, transparent 50%);
+            animation: wave 3s infinite linear;
+        }
+
+        @keyframes wave {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from { text-shadow: 0 0 10px #fff, 0 0 20px var(--primary-color), 0 0 30px var(--secondary-color); }
+            to { text-shadow: 0 0 20px #fff, 0 0 30px var(--accent-color), 0 0 40px var(--primary-color); }
+        }
+
+        main {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+            position: relative;
+        }
+
+        section {
+            background: var(--card-background);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        section::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        section:hover::before {
+            opacity: 1;
+        }
+
+        section:hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        h2 {
+            color: var(--accent-color);
+            margin-bottom: 1.5rem;
+            position: relative;
+            padding-left: 1.5rem;
+            font-size: 1.8rem;
+        }
+
+        h2::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(to bottom, var(--primary-color), var(--secondary-color));
+            border-radius: 2px;
+        }
+
+        #video-section {
+            text-align: center;
+        }
+
+        video {
+            max-width: 100%;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        ul {
+            list-style: none;
+        }
+
+        li {
+            background: rgba(255, 255, 255, 0.05);
+            margin: 1rem 0;
+            padding: 1.2rem;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            position: relative;
+            overflow: hidden;
+        }
+
+        li::before {
+            content: '\f21e';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            color: var(--accent-color);
+            margin-right: 1rem;
+            font-size: 1.2rem;
+            transition: transform 0.3s ease;
+        }
+
+        li:hover {
+            background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+            transform: translateX(10px) scale(1.02);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        li:hover::before {
+            transform: rotate(360deg);
+        }
+
+        /* Progress Indicator */
+        .progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+            transform-origin: 0% 50%;
+            transform: scaleX(0);
+            animation: progress 1s ease-out forwards;
+        }
+
+        @keyframes progress {
+            to { transform: scaleX(1); }
+        }
+
+        footer {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            text-align: center;
+            padding: 2rem;
+            margin-top: 3rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        footer::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                45deg,
+                transparent,
+                transparent 10px,
+                rgba(255, 255, 255, 0.1) 10px,
+                rgba(255, 255, 255, 0.1) 20px
+            );
+        }
+
+        /* Hover Cards Effect */
+        .card-hover {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .card-hover::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(
+                800px circle at var(--mouse-x) var(--mouse-y),
+                rgba(255, 255, 255, 0.06),
+                transparent 40%
+            );
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--background-color);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(var(--primary-color), var(--secondary-color));
+            border-radius: 5px;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            header {
+                padding: 2rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            section {
+                padding: 1.5rem;
+            }
+
+            video {
+                width: 100%;
+                height: auto;
+            }
+        }
+
+        /* Status Indicator */
+        .status-indicator {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--accent-color);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.5); opacity: 0.5; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="progress-bar"></div>
+    <div class="particles">
+        <!-- Particles will be added via JavaScript -->
+    </div>
+
+    <header>
+        <h1>Chương Trình Vật Lý Trị Liệu</h1>
+        <p>Phục hồi chức năng - Nâng cao sức khỏe</p>
+    </header>
+
+    <main>
+        <section id="video-section">
+            <div class="status-indicator"></div>
+            <h2>Video Quan Sát</h2>
+            <!-- <video id="patient-video" width="640" height="480" controls>
+                <source src="{{ url_for('static', filename='videos/video.mp4') }}" type="video/mp4">
+                Trình duyệt của bạn không hỗ trợ video.
+            </video> -->
+            <img style= "height: 480px; width: 640px;" id="patient-video" src="static/image/processed_GOOD.jpg" alt="Video Feed">
+        </section>
+
+        <section id="exercises">
+            <div class="status-indicator"></div>
+            <h2>Các Bài Tập</h2>
+            <ul>
+                <li>Bài Tập 1: Tập cơ tay</li>
+                <li>Bài Tập 2: Tập cơ chân</li>
+                <li>Bài Tập 3: Tập thăng bằng</li>
+                <li>Bài Tập 4: Tập kéo giãn</li>
+                <li>Bài Tập 5: Tập sức bền</li>
+            </ul>
+        </section>
+
+        <section id="patients">
+            <div class="status-indicator"></div>
+            <h2>Danh Sách Bệnh Nhân</h2>
+            <ul>
+                <li>Bệnh Nhân 1: Nguyễn Văn A</li>
+                <li>Bệnh Nhân 2: Trần Thị B</li>
+                <li>Bệnh Nhân 3: Lê Văn C</li>
+                <li>Bệnh Nhân 4: Phạm Thị D</li>
+                <li>Bệnh Nhân 5: Võ Văn E</li>
+            </ul>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2023 Chương Trình Vật Lý Trị Liệu</p>
+    </footer>
+
+    <script>
+        // Add particles
+        const particlesContainer = document.querySelector('.particles');
+        for (let i = 0; i < 50; i++) {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            particle.style.left = Math.random() * 100 + 'vw';
+            particle.style.animationDelay = Math.random() * 20 + 's';
+            particlesContainer.appendChild(particle);
+        }
+
+        // Card hover effect
+        document.addEventListener('mousemove', (e) => {
+            document.querySelectorAll('section').forEach(card => {
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+
+                card.style.setProperty('--mouse-x', `${x}px`);
+                card.style.setProperty('--mouse-y', `${y}px`);
+            });
+        });
+    </script>
+</body>
+</html>
