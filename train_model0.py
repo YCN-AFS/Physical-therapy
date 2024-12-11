@@ -1,17 +1,14 @@
 import pandas as pd
 from sklearn.model_selection import train_test_split
-
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression, LinearRegression, RidgeClassifier
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
-
-
 from sklearn.metrics import accuracy_score
 import pickle
 
 #Read data
-data_frame = pd.read_csv("again.csv")
+data_frame = pd.read_csv("video_poses.csv ")
 x = data_frame.drop("class", axis=1)
 y = data_frame['class']
 
@@ -33,9 +30,6 @@ for algo, pipeline in pieline.items():
 
     print(algo, accuracy_score(y_test, yhat))
 
-with open('delet.pkl', 'wb') as f:
+with open('pose_model.pkl', 'wb') as f:
     pickle.dump(fit_models['rf'], f)
-
-
-
-
+    

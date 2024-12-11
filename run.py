@@ -10,7 +10,7 @@ warnings.filterwarnings("ignore")
 mp_drawing = mp.solutions.drawing_utils
 mp_pose = mp.solutions.pose
 
-with open('test_again.pkl', 'rb') as file:
+with open('pose_model.pkl', 'rb') as file:
     model = pickle.load(file)
 
 columns = ('x1', 'y1', 'z1', 'v1', 'x2', 'y2', 'z2', 'v2', 'x3', 'y3', 'z3', 'v3', 'x4', 'y4', 'z4', 'v4',
@@ -60,13 +60,14 @@ height, width = frame.shape[:2]
 
 
 def draw_detection_box(image, landmarks, is_fall):
+    # print(f"Is fall: {is_fall}")
     landmark_points = np.array([(landmark.x * width, landmark.y * height) for landmark in landmarks])
     x, y, w, h = cv2.boundingRect(landmark_points.astype(int))
     color = (0, 0, 255) if is_fall else (0, 255, 0)  # Đỏ nếu té ngã, xanh lá nếu bình thường
     cv2.rectangle(image, (x, y), (x + w, y + h), color, 2)
 
 
-    status = "Fall detected!" if is_fall else "Normal"
+    status = "Not Good" if is_fall else "Good"
     text_size = cv2.getTextSize(status, cv2.FONT_HERSHEY_SIMPLEX, 0.7, 2)[0]
     text_x = x + (w - text_size[0]) // 2
     text_y = y - 10 if y - 10 > text_size[1] else y + text_size[1]
@@ -102,21 +103,23 @@ with mp_pose.Pose(min_detection_confidence=0.5, min_tracking_confidence=0.5, mod
             body_language_prob = model.predict_proba(x)[0]
 
             max_act = round(body_language_prob[np.argmax(body_language_prob)], 2)
-
-            if body_language_class == 'fall' and max_act > 0.4:
+            print(body_language_class, max_act)
+            
+            # Phát hiện té ngã với ngưỡng confidence cao hơn
+            if body_language_class == 'False' and max_act > 0.7:  # Tăng ngưỡng confidence lên 0.7
                 if fall_start_time is None:
                     fall_start_time = time.time()
-                elif time.time() - fall_start_time > 1:
+                    normal_start_time = None
+                if time.time() - fall_start_time > 0.5:  # Đổi elif thành if
                     fall_detected = True
-                normal_start_time = None
-            else:
-                if fall_detected:
-                    if normal_start_time is None:
-                        normal_start_time = time.time()
-                    elif time.time() - normal_start_time > 0.2:
-                        fall_detected = False
-                fall_start_time = None
-
+            elif body_language_class == 'True':  # Bỏ điều kiện max_act > 0.5
+                if normal_start_time is None:
+                    normal_start_time = time.time()
+                    fall_start_time = None
+                if time.time() - normal_start_time > 3:  # Giảm thời gian chờ xuống 3 giây
+                    fall_detected = False
+            
+            print(f"Fall detected: {fall_detected}, Class: {body_language_class}, Confidence: {max_act}")
             # Draw detection box and get its coordinates
             box_x, box_y, box_w, box_h = draw_detection_box(image, body_pose, fall_detected)
 
@@ -125,7 +128,7 @@ with mp_pose.Pose(min_detection_confidence=0.5, min_tracking_confidence=0.5, mod
                         (255, 255, 255), 1)
 
         except Exception as e:
-            print(e)
+            # print(e)
             pass
 
         # Render detections

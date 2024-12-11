@@ -358,14 +358,9 @@
     </header>
 
     <main>
-        <section id="video-section">
-            <div class="status-indicator"></div>
+        <section id="video-section" class="loading">
             <h2>Video Quan Sát</h2>
-            <!-- <video id="patient-video" width="640" height="480" controls>
-                <source src="{{ url_for('static', filename='videos/video.mp4') }}" type="video/mp4">
-                Trình duyệt của bạn không hỗ trợ video.
-            </video> -->
-            <img style= "height: 480px; width: 640px;" id="patient-video" src="static/image/processed_GOOD.jpg" alt="Video Feed">
+            <img src="{{ url_for('video_feed') }}" alt="Video Feed">
         </section>
 
         <section id="exercises">

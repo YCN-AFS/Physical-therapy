@@ -1,7 +1,7 @@
 import cv2
 import mediapipe as mp
-# import pickle
-# import pandas as pd
+import pickle
+import pandas as pd
 import numpy as np
 import warnings
 import time
@@ -10,10 +10,8 @@ warnings.filterwarnings("ignore")
 mp_drawing = mp.solutions.drawing_utils
 mp_pose = mp.solutions.pose
 
-path = '04-tuthedung.jpg'
-
-# with open('test_again.pkl', 'rb') as file:
-#     model = pickle.load(file)
+with open('test_again.pkl', 'rb') as file:
+    model = pickle.load(file)
 
 columns = ('x1', 'y1', 'z1', 'v1', 'x2', 'y2', 'z2', 'v2', 'x3', 'y3', 'z3', 'v3', 'x4', 'y4', 'z4', 'v4',
            'x5', 'y5', 'z5', 'v5', 'x6', 'y6', 'z6', 'v6', 'x7', 'y7', 'z7', 'v7', 'x8', 'y8', 'z8', 'v8',
@@ -33,6 +31,34 @@ columns = ('x1', 'y1', 'z1', 'v1', 'x2', 'y2', 'z2', 'v2', 'x3', 'y3', 'z3', 'v3
 
 # Initialize the fall detection variables
 
+
+fall_start_time = None
+normal_start_time = None
+fall_detected = False
+
+# cap = cv2.VideoCapture(0)
+
+def find_available_camera(max_index=10):
+    cap = None
+    for i in range(max_index):
+        cap = cv2.VideoCapture(i)
+        if cap.isOpened():
+            print(f"Camera found at index {i}")
+            return cap
+        else:
+            cap.release()
+    print("No available camera found.")
+    return None
+
+cap = find_available_camera()
+
+cap.set(3, 640)
+cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640 * 2)
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480 * 2)
+ret, frame = cap.read()
+height, width = frame.shape[:2]
+
+
 def draw_detection_box(image, landmarks, is_fall):
     landmark_points = np.array([(landmark.x * width, landmark.y * height) for landmark in landmarks])
     x, y, w, h = cv2.boundingRect(landmark_points.astype(int))
@@ -40,7 +66,7 @@ def draw_detection_box(image, landmarks, is_fall):
     cv2.rectangle(image, (x, y), (x + w, y + h), color, 2)
 
 
-    status = "Fall detected!" if is_fall else "Good"
+    status = "Fall detected!" if is_fall else "Normal"
     text_size = cv2.getTextSize(status, cv2.FONT_HERSHEY_SIMPLEX, 0.7, 2)[0]
     text_x = x + (w - text_size[0]) // 2
     text_y = y - 10 if y - 10 > text_size[1] else y + text_size[1]
@@ -48,59 +74,66 @@ def draw_detection_box(image, landmarks, is_fall):
 
     return x, y, w, h
 
-fall_start_time = None
-normal_start_time = None
-fall_detected = False
 
+with mp_pose.Pose(min_detection_confidence=0.5, min_tracking_confidence=0.5, model_complexity=2) as pose:
+    while cap.isOpened():
+        ret, frame = cap.read()
+        if not ret:
+            break
 
+        image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        image.flags.writeable = False
 
-# Đọc ảnh từ file (thay đổi đường dẫn tới ảnh của bạn)
-image_path = 'image/'+ path  # Thay đổi đường dẫn tới ảnh của bạn
-image = cv2.imread(image_path)
+        # Make detection
+        results = pose.process(image)
 
-height, width = image.shape[:2]
+        image.flags.writeable = True
+        image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
 
-# Thay đổi kích thước ảnh xuống một nửa
-new_width = int(width * 0.5)
-new_height = int(height * 0.5)
-image = cv2.resize(image, (new_width, new_height))
+        # Export coordinates
+        try:
+            body_pose = results.pose_landmarks.landmark
+            pose_row = list(np.array(
+                [[landmark.x, landmark.y, landmark.z, landmark.visibility] for landmark in body_pose]).flatten())
 
-# Kiểm tra xem ảnh có được đọc thành công không
-if image is None:
-    print("Không thể đọc ảnh.")
-else:
-    height, width = image.shape[:2]
+            # Make predictions
+            x = pd.DataFrame([pose_row], columns=columns)
+            body_language_class = model.predict(x)[0]
+            body_language_prob = model.predict_proba(x)[0]
 
-    # Xử lý ảnh
-    image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    image_rgb.flags.writeable = False
+            max_act = round(body_language_prob[np.argmax(body_language_prob)], 2)
 
-    # Initialize the pose detection
-    pose = mp_pose.Pose()
+            if body_language_class == 'fall' and max_act > 0.4:
+                if fall_start_time is None:
+                    fall_start_time = time.time()
+                elif time.time() - fall_start_time > 1:
+                    fall_detected = True
+                normal_start_time = None
+            else:
+                if fall_detected:
+                    if normal_start_time is None:
+                        normal_start_time = time.time()
+                    elif time.time() - normal_start_time > 0.2:
+                        fall_detected = False
+                fall_start_time = None
 
-    # Thực hiện phát hiện
-    results = pose.process(image_rgb)
+            # Draw detection box and get its coordinates
+            box_x, box_y, box_w, box_h = draw_detection_box(image, body_pose, fall_detected)
 
-    image_rgb.flags.writeable = True
-    image = cv2.cvtColor(image_rgb, cv2.COLOR_RGB2BGR)
+            # Display confidence
+            cv2.putText(image, f"Confidence: {max_act}", (box_x, box_y + box_h + 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5,
+                        (255, 255, 255), 1)
 
-    # Xuất tọa độ
-    try:
-        body_pose = results.pose_landmarks.landmark
-        pose_row = list(np.array(
-            [[landmark.x, landmark.y, landmark.z, landmark.visibility] for landmark in body_pose]).flatten())
+        except Exception as e:
+            print(e)
+            pass
 
-        # Vẽ hộp phát hiện và lấy tọa độ của nó
-        box_x, box_y, box_w, box_h = draw_detection_box(image, body_pose, fall_detected)
+        # Render detections
+        mp_drawing.draw_landmarks(image, results.pose_landmarks, mp_pose.POSE_CONNECTIONS)
+        cv2.imshow('Fall Detection', image)
 
-    except Exception as e:
-        print(e)
-        pass
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
 
-    # Vẽ các điểm khung xương
-    mp_drawing.draw_landmarks(image, results.pose_landmarks, mp_pose.POSE_CONNECTIONS)
-
-    # Hiển thị ảnh
-    cv2.imshow('Fall Detection', image)
-    # cv2.waitKey(0)  # Chờ cho đến khi nhấn phím để đóng cửa sổ
-    cv2.imwrite('news/'+ path, image)
+cap.release()
+cv2.destroyAllWindows()
