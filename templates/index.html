@@ -103,22 +103,36 @@
         const videoCanvas = document.getElementById('videoCanvas');
         const ctx = videoCanvas.getContext('2d');
 
+        // Khởi tạo camera khi trang web load xong
+        document.addEventListener('DOMContentLoaded', async function() {
+            if (isCameraOn) {
+                await startCamera();
+            }
+        });
+
+        // Sửa lại hàm startCamera để thêm debug
         async function startCamera() {
             try {
+                console.log("Requesting camera access...");
                 mediaStream = await navigator.mediaDevices.getUserMedia({ 
                     video: { 
                         width: 640,
                         height: 480
                     } 
                 });
+                console.log("Camera access granted");
+                
                 browserVideo.srcObject = mediaStream;
+                await browserVideo.play(); // Đảm bảo video đã play
+                
                 videoCanvas.width = 640;
                 videoCanvas.height = 480;
                 
-                // Bắt đầu gửi frames
+                console.log("Starting to send frames...");
                 sendFrames();
             } catch (err) {
                 console.error("Error accessing camera:", err);
+                alert("Không thể truy cập camera. Vui lòng kiểm tra quyền truy cập camera của trình duyệt.");
             }
         }
 
@@ -129,20 +143,28 @@
             }
         }
 
+        // Sửa lại hàm sendFrames để thêm debug
         async function sendFrames() {
-            if (!mediaStream) return;
-            
-            ctx.drawImage(browserVideo, 0, 0, videoCanvas.width, videoCanvas.height);
-            const imageData = videoCanvas.toDataURL('image/jpeg', 0.8);
+            if (!mediaStream) {
+                console.log("No media stream available");
+                return;
+            }
             
             try {
-                await fetch('/process_frame', {
+                ctx.drawImage(browserVideo, 0, 0, videoCanvas.width, videoCanvas.height);
+                const imageData = videoCanvas.toDataURL('image/jpeg', 0.8);
+                
+                const response = await fetch('/process_frame', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({ frame: imageData })
                 });
+                
+                if (!response.ok) {
+                    console.error("Server response not OK:", response.status);
+                }
             } catch (err) {
                 console.error("Error sending frame:", err);
             }
@@ -152,18 +174,26 @@
             }
         }
 
+        // Sửa lại event listener cho nút toggle để thêm debug
         toggleButton.addEventListener('click', async () => {
-            if (isCameraOn) {
-                stopCamera();
-                videoFeed.src = "{{ url_for('static', filename='placeholder.png') }}";
-                toggleButton.innerHTML = '<i class="fas fa-video-slash"></i> Bật Camera';
-            } else {
-                await startCamera();
-                videoFeed.src = "{{ url_for('video_feed') }}";
-                toggleButton.innerHTML = '<i class="fas fa-video"></i> Tắt Camera';
+            console.log("Toggle button clicked. Current state:", isCameraOn);
+            try {
+                if (isCameraOn) {
+                    console.log("Stopping camera...");
+                    stopCamera();
+                    videoFeed.src = "{{ url_for('static', filename='placeholder.png') }}";
+                    toggleButton.innerHTML = '<i class="fas fa-video-slash"></i> Bật Camera';
+                } else {
+                    console.log("Starting camera...");
+                    await startCamera();
+                    videoFeed.src = "{{ url_for('video_feed') }}";
+                    toggleButton.innerHTML = '<i class="fas fa-video"></i> Tắt Camera';
+                }
+                isCameraOn = !isCameraOn;
+                await fetch(`/toggle_camera/${isCameraOn ? 1 : 0}`);
+            } catch (err) {
+                console.error("Error in toggle:", err);
             }
-            isCameraOn = !isCameraOn;
-            await fetch(`/toggle_camera/${isCameraOn}`);
         });
 
         // Thêm WebSocket để nhận thông báo từ server

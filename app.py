@@ -72,41 +72,15 @@ def notify_clients():
     
     websocket_connections.difference_update(dead_sockets)
 
-def find_available_camera(max_index=10):
-    cap = None
-    for i in range(max_index):
-        cap = cv2.VideoCapture(i)
-        if cap.isOpened():
-            print(f"Camera found at index {i}")
-            return cap
-        else:
-            cap.release()
-    print("No available camera found.")
-    return None
-
 def camera_capture():
     global camera_active
-    cap = find_available_camera()
-    if not cap:
-        return
-    
-    cap.set(3, 640)
-    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640 * 2)
-    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480 * 2)
-    
     while camera_active:
         if not camera_active:
             time.sleep(0.1)
             continue
             
-        ret, frame = cap.read()
-        if not ret:
-            break
-            
-        if not frame_queue.full():
-            frame_queue.put(frame)
-    
-    cap.release()
+        # Chỉ đợi frames từ browser
+        time.sleep(0.01)
 
 def process_frame():
     global camera_active, fall_start_time, normal_start_time, fall_detected
@@ -226,4 +200,4 @@ def process_frame_from_browser():
         return {'success': False, 'error': str(e)}, 400
 
 if __name__ == '__main__':
-    app.run(debug=True, threaded=True)
+    app.run(host='0.0.0.0', debug=False, port=8032)
