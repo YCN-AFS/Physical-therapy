@@ -32,6 +32,8 @@
             <button id="toggleCamera" class="camera-button">
                 <i class="fas fa-video"></i> Bật/Tắt Camera
             </button>
+            <video id="browserVideo" autoplay playsinline style="display: none;"></video>
+            <canvas id="videoCanvas" style="display: none;"></canvas>
             <img id="videoFeed" src="{{ url_for('video_feed') }}" alt="Video Feed">
         </section>
 
@@ -96,17 +98,71 @@
         const videoFeed = document.getElementById('videoFeed');
         let isCameraOn = true;
 
+        let mediaStream = null;
+        const browserVideo = document.getElementById('browserVideo');
+        const videoCanvas = document.getElementById('videoCanvas');
+        const ctx = videoCanvas.getContext('2d');
+
+        async function startCamera() {
+            try {
+                mediaStream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { 
+                        width: 640,
+                        height: 480
+                    } 
+                });
+                browserVideo.srcObject = mediaStream;
+                videoCanvas.width = 640;
+                videoCanvas.height = 480;
+                
+                // Bắt đầu gửi frames
+                sendFrames();
+            } catch (err) {
+                console.error("Error accessing camera:", err);
+            }
+        }
+
+        function stopCamera() {
+            if (mediaStream) {
+                mediaStream.getTracks().forEach(track => track.stop());
+                mediaStream = null;
+            }
+        }
+
+        async function sendFrames() {
+            if (!mediaStream) return;
+            
+            ctx.drawImage(browserVideo, 0, 0, videoCanvas.width, videoCanvas.height);
+            const imageData = videoCanvas.toDataURL('image/jpeg', 0.8);
+            
+            try {
+                await fetch('/process_frame', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ frame: imageData })
+                });
+            } catch (err) {
+                console.error("Error sending frame:", err);
+            }
+            
+            if (mediaStream) {
+                requestAnimationFrame(sendFrames);
+            }
+        }
+
         toggleButton.addEventListener('click', async () => {
             if (isCameraOn) {
+                stopCamera();
                 videoFeed.src = "{{ url_for('static', filename='placeholder.png') }}";
                 toggleButton.innerHTML = '<i class="fas fa-video-slash"></i> Bật Camera';
             } else {
+                await startCamera();
                 videoFeed.src = "{{ url_for('video_feed') }}";
                 toggleButton.innerHTML = '<i class="fas fa-video"></i> Tắt Camera';
             }
             isCameraOn = !isCameraOn;
-            
-            // Gửi trạng thái camera đến server
             await fetch(`/toggle_camera/${isCameraOn}`);
         });
 

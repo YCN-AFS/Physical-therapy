@@ -1,4 +1,4 @@
-from flask import Flask, render_template, Response
+from flask import Flask, render_template, Response, request
 import cv2
 import mediapipe as mp
 import pickle
@@ -10,6 +10,8 @@ from flask_sock import Sock
 import json
 from queue import Queue
 import threading
+import base64
+import re
 
 app = Flask(__name__)
 sock = Sock(app)
@@ -108,8 +110,6 @@ def camera_capture():
 
 def process_frame():
     global camera_active, fall_start_time, normal_start_time, fall_detected
-    last_warning_time = 0  # Thêm biến để theo dõi thời gian cảnh báo cuối cùng
-    warning_interval = 2.0  # Khoảng thời gian giữa các cảnh báo (2 giây)
     
     with mp_pose.Pose(min_detection_confidence=0.5, min_tracking_confidence=0.5, model_complexity=2) as pose:
         while camera_active:
@@ -136,23 +136,20 @@ def process_frame():
                 body_language_prob = model.predict_proba(x)[0]
                 max_act = round(body_language_prob[np.argmax(body_language_prob)], 2)
 
-                # Sửa phần xử lý fall detection
+                # Copy phần xử lý fall detection từ run.py
+                global fall_start_time, normal_start_time, fall_detected
                 if body_language_class == 'notgood' and max_act > 0.6:
-                    current_time = time.time()
                     if fall_start_time is None:
-                        fall_start_time = current_time
+                        print("Fall detected, sending notification")
+                        fall_start_time = time.time()
                         normal_start_time = None
-                        notify_clients()  # Cảnh báo lần đầu
-                    elif current_time - last_warning_time >= warning_interval:
-                        notify_clients()  # Phát cảnh báo lặp lại
-                        last_warning_time = current_time
-                    if current_time - fall_start_time > 0.5:
+                        notify_clients()
+                    if time.time() - fall_start_time > 0.5:
                         fall_detected = True
                 elif body_language_class == 'True':
                     if normal_start_time is None:
                         normal_start_time = time.time()
                         fall_start_time = None
-                        last_warning_time = 0  # Reset thời gian cảnh báo
                     if time.time() - normal_start_time > 3:
                         fall_detected = False
 
@@ -207,6 +204,26 @@ def toggle_camera(status):
         camera_thread.start()
     
     return {'success': True}
+
+@app.route('/process_frame', methods=['POST'])
+def process_frame_from_browser():
+    try:
+        data = request.json
+        # Xử lý base64 image data
+        image_data = data['frame'].split(',')[1]
+        image_bytes = base64.b64decode(image_data)
+        
+        # Chuyển đổi thành numpy array
+        nparr = np.frombuffer(image_bytes, np.uint8)
+        frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+        
+        if not frame_queue.full():
+            frame_queue.put(frame)
+            
+        return {'success': True}
+    except Exception as e:
+        print(f"Error processing frame: {e}")
+        return {'success': False, 'error': str(e)}, 400
 
 if __name__ == '__main__':
     app.run(debug=True, threaded=True)
